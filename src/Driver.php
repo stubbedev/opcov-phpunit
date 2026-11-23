@@ -6,7 +6,6 @@ namespace OpCov\PHPUnit;
 
 use LogicException;
 use OpCov\PHPUnit\Branch\FileBranches;
-use OpCov\PHPUnit\Branch\Outcome;
 use SebastianBergmann\CodeCoverage\Data\RawCodeCoverageData;
 use SebastianBergmann\CodeCoverage\Driver\Driver as CodeCoverageDriver;
 use SebastianBergmann\CodeCoverage\Driver\Granularity;
@@ -83,11 +82,12 @@ final class Driver extends CodeCoverageDriver
         }
 
         foreach ($hits as $file => $hit) {
+            $model = $this->modelOf($file);
             $raw->executed(
                 $file,
                 array_keys($hit['lines']),
-                $this->modelOf($file),
-                $raw->branches ? self::taken($hit['functions'], $file) : [],
+                $model,
+                $raw->branches ? $model->taken($hit['functions']) : [],
             );
         }
 
@@ -102,25 +102,5 @@ final class Driver extends CodeCoverageDriver
                 $file,
             ))
         );
-    }
-
-    /**
-     * @param array<string, array{outcomes: array<string, true>, loops: array<string, mixed>}> $functions
-     *
-     * @return array<string, array<int<0, max>, true>>
-     */
-    private static function taken(array $functions, string $file): array
-    {
-        $taken = [];
-
-        foreach ($functions as $key => $function) {
-            $taken[$key] = [];
-
-            foreach (array_keys($function['outcomes']) as $id) {
-                $taken[$key][Outcome::number($id, sprintf('%s %s', $file, $key))] = true;
-            }
-        }
-
-        return $taken;
     }
 }

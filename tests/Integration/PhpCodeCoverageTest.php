@@ -20,6 +20,19 @@ final class PhpCodeCoverageTest extends TestCase
         [15, [self::FORMATS]],
     ];
 
+    private const string JOINS_NONE = 'Fixture\Tests\LabelTest::testJoinsAPath#none';
+
+    private const string JOINS_ONE = 'Fixture\Tests\LabelTest::testJoinsAPath#one';
+
+    private const string JOINS_TWO = 'Fixture\Tests\LabelTest::testJoinsAPath#two';
+
+    private const array LABEL_PATH_BRANCHES = [
+        2 => [34, [self::JOINS_ONE, self::JOINS_TWO]],
+        3 => [34, [self::JOINS_NONE, self::JOINS_ONE, self::JOINS_TWO]],
+        4 => [34, [self::JOINS_NONE]],
+        5 => [34, [self::JOINS_TWO]],
+    ];
+
     public function testTheCovFileCarriesLinesAndAttributionForPhpCodeCoverage12(): void
     {
         $fixture = Fixture::runner('phpunit12');
@@ -38,8 +51,10 @@ final class PhpCodeCoverageTest extends TestCase
             }
             $branches = [];
             foreach ($coverage->getData(true)->functionCoverage() as $functions) {
-                foreach (($functions['Fixture\Label->format'] ?? null)?->branches ?? [] as $id => $branch) {
-                    $branches[$id] = [$branch->line_start, $branch->hit];
+                foreach (['Fixture\Label->format', 'Fixture\Label->path'] as $name) {
+                    foreach (($functions[$name] ?? null)?->branches ?? [] as $id => $branch) {
+                        $branches[$name][$id] = [$branch->line_start, $branch->hit];
+                    }
                 }
             }
             echo json_encode([
@@ -47,7 +62,8 @@ final class PhpCodeCoverageTest extends TestCase
                 'tests' => array_keys($coverage->getTests()),
                 'shipping12' => $lines['Shipping.php'][12],
                 'label13' => $lines['Label.php'][13],
-                'labelFormatBranches' => $branches,
+                'labelFormatBranches' => $branches['Fixture\Label->format'],
+                'labelPathBranches' => $branches['Fixture\Label->path'],
             ]);
             PHP]);
         self::assertSame(0, $read->exitCode, $read->describe());
@@ -57,6 +73,9 @@ final class PhpCodeCoverageTest extends TestCase
                 'tests' => [
                     'Fixture\Tests\BrokenSetUpTest::testNeverRuns',
                     'Fixture\Tests\LabelTest::testFormatsANamedLabel',
+                    self::JOINS_NONE,
+                    self::JOINS_ONE,
+                    self::JOINS_TWO,
                     'Fixture\Tests\LabelTest::testRefusesALabelWithoutCity',
                     'Fixture\Tests\ShippingTest::testCostDependsOnWeight#heavy',
                     'Fixture\Tests\ShippingTest::testCostDependsOnWeight#light',
@@ -66,6 +85,7 @@ final class PhpCodeCoverageTest extends TestCase
                 'shipping12' => ['Fixture\Tests\ShippingTest::testLargeOrdersShipForFree'],
                 'label13' => [self::FORMATS, self::REFUSES],
                 'labelFormatBranches' => self::LABEL_FORMAT_BRANCHES,
+                'labelPathBranches' => self::LABEL_PATH_BRANCHES,
             ],
             json_decode($read->output, associative: true, flags: JSON_THROW_ON_ERROR),
             $read->describe(),
@@ -146,12 +166,17 @@ final class PhpCodeCoverageTest extends TestCase
             }
             echo json_encode([
                 'labelFormat' => $branches['Fixture\Label->format'],
+                'labelPath' => $branches['Fixture\Label->path'],
                 'shippingCost' => array_keys($branches['Fixture\Shipping->cost']),
             ]);
             PHP]);
         self::assertSame(0, $read->exitCode, $read->describe());
         self::assertSame(
-            ['labelFormat' => self::LABEL_FORMAT_BRANCHES, 'shippingCost' => [0, 1, 4, 5, 6, 7, 8, 9, 10]],
+            [
+                'labelFormat' => self::LABEL_FORMAT_BRANCHES,
+                'labelPath' => self::LABEL_PATH_BRANCHES,
+                'shippingCost' => [0, 1, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            ],
             json_decode($read->output, associative: true, flags: JSON_THROW_ON_ERROR),
             $read->describe(),
         );

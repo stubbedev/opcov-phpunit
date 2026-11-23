@@ -8,35 +8,30 @@ use InvalidArgumentException;
 use SebastianBergmann\CodeCoverage\Driver\Driver;
 
 /**
- * @phpstan-type BranchType array{
- *     op_start: int,
- *     op_end: int,
- *     line_start: int,
- *     line_end: int,
- *     hit: int,
- *     out: array<int, int>,
- *     out_hit: array<int, int>,
- * }
+ * @phpstan-import-type BranchType from Branch
  * @phpstan-type FunctionCoverageType array{branches: array<int, BranchType>, paths: array<int, never>}
  */
 final readonly class FunctionBranches
 {
     /**
      * @param non-empty-string $name
-     * @param array<int<0, max>, Outcome> $branches
+     * @param array<int<0, max>, Branch> $branches
      * @param array<int<0, max>, true> $outcomes
+     * @param int<0, max> $firstLoopBranch
      */
     private function __construct(
         public string $name,
         public array $branches,
         private array $outcomes,
+        private int $firstLoopBranch,
     ) {}
 
     /**
      * @param non-empty-string $name
      * @param list<Outcome> $outcomes
+     * @param list<Loop> $loops
      */
-    public static function fromOutcomes(string $name, array $outcomes): self
+    public static function of(string $name, array $outcomes, array $loops): self
     {
         $branches = [];
         $numbers = [];
@@ -45,11 +40,57 @@ final readonly class FunctionBranches
             $numbers[$outcome->number] = true;
 
             if ($outcome->kind->countsTowardVerdict()) {
-                $branches[$outcome->number] = $outcome;
+                $branches[$outcome->number] = $outcome->branch;
             }
         }
 
-        return new self($name, $branches, $numbers);
+        $firstLoopBranch = $numbers === [] ? 0 : max(array_keys($numbers)) + 1;
+
+        $loopBranches = array_map(
+            /** @return array<int<0, max>, Branch> */
+            static fn(Loop $loop): array => $loop->branches($firstLoopBranch),
+            $loops,
+        );
+
+        return new self($name, array_replace($branches, ...$loopBranches), $numbers, $firstLoopBranch);
+    }
+
+    /**
+     * @param array<string, true> $outcomes taken outcome ids
+     * @param array<string, array<string, true>> $loops findings by loop id, as \opcov\stop() reports them
+     *
+     * @return array<int<0, max>, true> taken branch and outcome numbers
+     */
+    public function taken(array $outcomes, array $loops): array
+    {
+        $taken = [];
+
+        foreach (array_keys($outcomes) as $id) {
+            $number = Id::Outcome->number($id, $this->name);
+
+            if (!array_key_exists($number, $this->outcomes)) {
+                throw new InvalidArgumentException(sprintf('%s has no outcome %s', $this->name, $id));
+            }
+
+            $taken[$number] = true;
+        }
+
+        foreach ($loops as $id => $findings) {
+            $loop = Id::Loop->number($id, $this->name);
+            $what = sprintf('%s loop %s', $this->name, $id);
+
+            foreach (array_keys($findings) as $name) {
+                $number = LoopFinding::parse($name, $what)->branch($this->firstLoopBranch, $loop);
+
+                if (!array_key_exists($number, $this->branches)) {
+                    throw new InvalidArgumentException(sprintf('%s has no finding "%s"', $what, $name));
+                }
+
+                $taken[$number] = true;
+            }
+        }
+
+        return $taken;
     }
 
     /**
@@ -59,26 +100,16 @@ final readonly class FunctionBranches
      */
     public function coverage(array $taken): array
     {
-        foreach (array_keys($taken) as $number) {
-            if (!array_key_exists($number, $this->outcomes)) {
-                throw new InvalidArgumentException(sprintf('%s has no outcome o%d', $this->name, $number));
-            }
-        }
+        $numbers = array_keys($this->branches);
+        $branches = array_map(
+            /** @return BranchType */
+            static fn(int $number, Branch $branch): array => $branch->coverage(
+                array_key_exists($number, $taken) ? Driver::BRANCH_HIT : Driver::BRANCH_NOT_HIT,
+            ),
+            $numbers,
+            $this->branches,
+        );
 
-        $branches = [];
-
-        foreach ($this->branches as $number => $outcome) {
-            $branches[$number] = [
-                'op_start' => $outcome->site,
-                'op_end' => $outcome->site,
-                'line_start' => $outcome->line,
-                'line_end' => $outcome->line,
-                'hit' => array_key_exists($number, $taken) ? Driver::BRANCH_HIT : Driver::BRANCH_NOT_HIT,
-                'out' => [],
-                'out_hit' => [],
-            ];
-        }
-
-        return ['branches' => $branches, 'paths' => []];
+        return ['branches' => array_combine($numbers, $branches), 'paths' => []];
     }
 }

@@ -66,7 +66,7 @@ function get_status(): array
  *             span: null|list<int>,
  *             hits: list<int>,
  *         }>,
- *         loops: list<array{id: string, kind: string, line: int, zero: null|list<int>, second: list<int>}>,
+ *         loops: list<array{id: string, site: int, kind: string, line: int, zero: null|list<int>, second: list<int>}>,
  *     }>,
  * }>
  */

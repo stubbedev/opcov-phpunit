@@ -90,4 +90,12 @@ final class Json
 
         return $value;
     }
+
+    /**
+     * @return list<int<0, max>>
+     */
+    public static function hits(mixed $value, string $what, int $count): array
+    {
+        return array_map(static fn(mixed $index): int => self::index($index, $what, $count), self::list($value, $what));
+    }
 }

@@ -11,3 +11,11 @@ test('formats a named label', function (): void {
 test('refuses a label without city', function (): void {
     Label::format(null, '');
 })->throws(InvalidArgumentException::class);
+
+test('joins a path', function (array $parts, string $expected): void {
+    expect(Label::path($parts))->toBe($expected);
+})->with([
+    'none' => [[], ''],
+    'one' => [['a'], '/a'],
+    'two' => [['a', 'b'], '/a/b'],
+]);

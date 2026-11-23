@@ -41,6 +41,9 @@ final class RunnersTest extends TestCase
             [
                 'Fixture\Tests\BrokenSetUpTest::testNeverRuns',
                 'Fixture\Tests\LabelTest::testFormatsANamedLabel',
+                'Fixture\Tests\LabelTest::testJoinsAPath#none',
+                'Fixture\Tests\LabelTest::testJoinsAPath#one',
+                'Fixture\Tests\LabelTest::testJoinsAPath#two',
                 'Fixture\Tests\LabelTest::testRefusesALabelWithoutCity',
                 'Fixture\Tests\ShippingTest::testCostDependsOnWeight#heavy',
                 'Fixture\Tests\ShippingTest::testCostDependsOnWeight#light',

@@ -77,10 +77,7 @@ final readonly class ReportFile
             }
 
             $what = sprintf('files.%s.lines.%d', $key, $number);
-            $lines[$number] = array_map(
-                static fn(mixed $index): int => Json::index($index, $what, $testCount),
-                Json::list($entries[$line] ?? null, $what),
-            );
+            $lines[$number] = Json::hits($entries[$line] ?? null, $what, $testCount);
         }
 
         return new self(

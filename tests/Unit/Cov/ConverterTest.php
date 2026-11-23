@@ -27,6 +27,16 @@ final class ConverterTest extends TestCase
             return 2;
         }
 
+        function total(array $items): int
+        {
+            $sum = 0;
+            foreach ($items as $item) {
+                $sum += $item;
+            }
+
+            return $sum;
+        }
+
         PHP;
 
     private TemporaryDirectory $directory;
@@ -43,7 +53,7 @@ final class ConverterTest extends TestCase
         $this->directory->remove();
     }
 
-    public function testLinesOutcomesAndAttributionSurviveTheConversion(): void
+    public function testLinesOutcomesLoopsAndAttributionSurviveTheConversion(): void
     {
         $source = $this->directory->write('src/choose.php', self::SOURCE);
         $report = $this->directory->write('opcov.json', $this->report(hash_file('sha256', $source)));
@@ -69,7 +79,17 @@ final class ConverterTest extends TestCase
         }
 
         self::assertSame(
-            ['choose.php' => [5 => ['T::first', 'T::second'], 6 => ['T::first'], 9 => ['T::second']]],
+            [
+                'choose.php' => [
+                    5 => ['T::first', 'T::second'],
+                    6 => ['T::first'],
+                    9 => ['T::second'],
+                    14 => ['T::first', 'T::second'],
+                    15 => ['T::first', 'T::second'],
+                    16 => ['T::first'],
+                    19 => ['T::first', 'T::second'],
+                ],
+            ],
             $lines,
         );
         $branches = [];
@@ -85,7 +105,18 @@ final class ConverterTest extends TestCase
             }
         }
 
-        self::assertSame(['choose' => [0 => [5, ['T::first']], 1 => [5, ['T::second']]]], $branches);
+        self::assertSame(
+            [
+                'choose' => [0 => [5, ['T::first']], 1 => [5, ['T::second']]],
+                'total' => [
+                    2 => [15, ['T::first']],
+                    3 => [15, ['T::first', 'T::second']],
+                    4 => [15, ['T::second']],
+                    5 => [15, ['T::first']],
+                ],
+            ],
+            $branches,
+        );
         self::assertSame(['out/coverage.cov'], $this->filesIn('out'));
     }
 
@@ -161,7 +192,15 @@ final class ConverterTest extends TestCase
             'files' => [
                 'src/choose.php' => [
                     'sha256' => $sha256,
-                    'lines' => ['5' => [0, 1], '6' => [0], '9' => [1]],
+                    'lines' => [
+                        '5' => [0, 1],
+                        '6' => [0],
+                        '9' => [1],
+                        '14' => [0, 1],
+                        '15' => [0, 1],
+                        '16' => [0],
+                        '19' => [0, 1],
+                    ],
                     'functions' => [
                         '{main}@src/choose.php' => ['span' => null, 'outcomes' => [], 'loops' => []],
                         'choose' => [
@@ -185,6 +224,53 @@ final class ConverterTest extends TestCase
                                 ],
                             ],
                             'loops' => [],
+                        ],
+                        'total' => [
+                            'span' => null,
+                            'outcomes' => [
+                                [
+                                    'id' => 'o0',
+                                    'site' => 2,
+                                    'kind' => 'LoopEnter',
+                                    'line' => 15,
+                                    'span' => null,
+                                    'hits' => [0, 1],
+                                ],
+                                [
+                                    'id' => 'o1',
+                                    'site' => 2,
+                                    'kind' => 'LoopSkip',
+                                    'line' => 15,
+                                    'span' => null,
+                                    'hits' => [],
+                                ],
+                                [
+                                    'id' => 'o2',
+                                    'site' => 3,
+                                    'kind' => 'LoopBack',
+                                    'line' => 15,
+                                    'span' => null,
+                                    'hits' => [0],
+                                ],
+                                [
+                                    'id' => 'o3',
+                                    'site' => 3,
+                                    'kind' => 'LoopExit',
+                                    'line' => 15,
+                                    'span' => null,
+                                    'hits' => [0, 1],
+                                ],
+                            ],
+                            'loops' => [
+                                [
+                                    'id' => 'l0',
+                                    'site' => 3,
+                                    'kind' => 'Foreach',
+                                    'line' => 15,
+                                    'zero' => [1],
+                                    'second' => [0],
+                                ],
+                            ],
                         ],
                     ],
                 ],

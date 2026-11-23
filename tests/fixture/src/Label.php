@@ -23,4 +23,18 @@ final class Label
     {
         return 'prepared';
     }
+
+    /**
+     * @param list<string> $parts
+     */
+    public static function path(array $parts): string
+    {
+        $path = '';
+
+        foreach ($parts as $part) {
+            $path .= '/' . $part;
+        }
+
+        return $path;
+    }
 }
