@@ -1,0 +1,11 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require $_composer_autoload_path ?? dirname(__DIR__) . '/vendor/autoload.php';
+
+$environment = getenv();
+$arguments = array_slice($argv, 1);
+
+OpCov\PHPUnit\Launcher\Command::run($arguments, $environment);

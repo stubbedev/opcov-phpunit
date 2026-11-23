@@ -1,0 +1,31 @@
+{
+    "name": "opcov/fixture-pest4",
+    "description": "opcov/phpunit fixture project run under pest4",
+    "type": "project",
+    "license": "MIT",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../..",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "php": "~8.4.0 || ~8.5.0 || ~8.6.0",
+        "opcov/phpunit": "@dev",
+        "pestphp/pest": "4.7.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fixture\\": "../src/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

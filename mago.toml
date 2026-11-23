@@ -1,0 +1,46 @@
+php-version = "8.4.0"
+
+[source]
+paths = ["src", "bin", "tests"]
+includes = ["vendor", "stubs"]
+excludes = ["tests/fixture/**"]
+
+[formatter]
+print-width = 120
+
+[linter]
+minimum-fail-level = "Help"
+integrations = ["phpunit"]
+
+[linter.rules]
+assertion-style = { style = "self" }
+no-redundant-else = { enabled = true }
+prefer-early-return = { enabled = true }
+no-is-null = { enabled = true }
+no-dead-store = { enabled = true }
+no-redundant-variable = { enabled = true }
+no-unused-closure-capture = { enabled = true }
+no-parameter-shadowing = { enabled = true }
+prefer-self-return-type = { enabled = true }
+require-namespace = { enabled = true }
+
+[analyzer]
+minimum-fail-level = "Help"
+find-unused-expressions = true
+find-unused-definitions = true
+find-overly-wide-return-types = true
+analyze-dead-code = true
+strict-list-index-checks = true
+strict-array-index-existence = true
+no-boolean-literal-comparison = true
+check-missing-type-hints = true
+check-closure-missing-type-hints = true
+check-arrow-function-missing-type-hints = true
+check-missing-override = true
+find-unused-parameters = true
+check-property-initialization = true
+check-use-statements = true
+check-name-casing = true
+enforce-class-finality = true
+check-dead-catch = true
+class-initializers = ["setUp"]

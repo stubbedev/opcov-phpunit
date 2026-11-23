@@ -1,0 +1,6 @@
+vendor/
+tests/fixture/*/vendor/
+tests/fixture/*/build/
+build/
+.phpunit.cache/
+tests/fixture/*/.phpunit.result.cache

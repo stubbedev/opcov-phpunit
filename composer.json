@@ -1,0 +1,46 @@
+{
+    "name": "opcov/phpunit",
+    "description": "PHPUnit 12/13 and Pest 4 integration for the opcov coverage extension",
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/stubbedev/opcov",
+    "keywords": [
+        "coverage",
+        "code-coverage",
+        "phpunit",
+        "pest"
+    ],
+    "support": {
+        "issues": "https://github.com/stubbedev/opcov/issues",
+        "source": "https://github.com/stubbedev/opcov",
+        "docs": "https://github.com/stubbedev/opcov/blob/main/docs/phpunit.md"
+    },
+    "require": {
+        "php": "~8.4.0 || ~8.5.0 || ~8.6.0",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "phpunit/phpunit": "^12.0 || ^13.3"
+    },
+    "suggest": {
+        "ext-opcov": "The opcov extension that collects the coverage; see docs/install.md",
+        "ext-pcntl": "Required by vendor/bin/opcov-phpunit to start the test runner",
+        "ext-posix": "Required by vendor/bin/opcov-phpunit to create its private run directory"
+    },
+    "autoload": {
+        "psr-4": {
+            "OpCov\\PHPUnit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "OpCov\\PHPUnit\\Tests\\": "tests/"
+        }
+    },
+    "bin": [
+        "bin/opcov-phpunit",
+        "bin/opcov-cov"
+    ],
+    "config": {
+        "sort-packages": true
+    }
+}

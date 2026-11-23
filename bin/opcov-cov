@@ -1,0 +1,13 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require $_composer_autoload_path ?? dirname(__DIR__) . '/vendor/autoload.php';
+
+exit(OpCov\PHPUnit\Cov\Command::run(
+    array_slice($argv, 1),
+    static function (string $message): void {
+        fwrite(STDERR, $message . PHP_EOL);
+    },
+));
