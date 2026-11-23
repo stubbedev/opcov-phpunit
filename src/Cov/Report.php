@@ -7,6 +7,7 @@ namespace OpCov\PHPUnit\Cov;
 use InvalidArgumentException;
 use JsonException;
 use OpCov\PHPUnit\Handshake;
+use OpCov\PHPUnit\Json;
 use OpCov\PHPUnit\Version;
 
 final readonly class Report

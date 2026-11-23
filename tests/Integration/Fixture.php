@@ -10,6 +10,8 @@ final readonly class Fixture
 {
     public const string ROOT = __DIR__ . '/../fixture';
 
+    public const int PHPUNIT_ERRORS = 2;
+
     /**
      * @param non-empty-string $runnerDirectory
      */

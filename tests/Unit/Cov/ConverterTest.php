@@ -43,7 +43,7 @@ final class ConverterTest extends TestCase
         $this->directory->remove();
     }
 
-    public function testLinesAndAttributionSurviveTheConversion(): void
+    public function testLinesOutcomesAndAttributionSurviveTheConversion(): void
     {
         $source = $this->directory->write('src/choose.php', self::SOURCE);
         $report = $this->directory->write('opcov.json', $this->report(hash_file('sha256', $source)));
@@ -72,6 +72,20 @@ final class ConverterTest extends TestCase
             ['choose.php' => [5 => ['T::first', 'T::second'], 6 => ['T::first'], 9 => ['T::second']]],
             $lines,
         );
+        $branches = [];
+
+        foreach ($data->functionCoverage() as $functions) {
+            foreach ($functions as $name => $function) {
+                foreach ($function->branches as $id => $branch) {
+                    $branches[$name][$id] = [
+                        $branch->line_start,
+                        array_map(static fn(int $index): string => $names[$index] ?? '?', array_keys($branch->hit)),
+                    ];
+                }
+            }
+        }
+
+        self::assertSame(['choose' => [0 => [5, ['T::first']], 1 => [5, ['T::second']]]], $branches);
         self::assertSame(['out/coverage.cov'], $this->filesIn('out'));
     }
 
@@ -148,7 +162,31 @@ final class ConverterTest extends TestCase
                 'src/choose.php' => [
                     'sha256' => $sha256,
                     'lines' => ['5' => [0, 1], '6' => [0], '9' => [1]],
-                    'functions' => [],
+                    'functions' => [
+                        '{main}@src/choose.php' => ['span' => null, 'outcomes' => [], 'loops' => []],
+                        'choose' => [
+                            'span' => null,
+                            'outcomes' => [
+                                [
+                                    'id' => 'o0',
+                                    'site' => 1,
+                                    'kind' => 'IfTrue',
+                                    'line' => 5,
+                                    'span' => null,
+                                    'hits' => [0],
+                                ],
+                                [
+                                    'id' => 'o1',
+                                    'site' => 1,
+                                    'kind' => 'IfFalse',
+                                    'line' => 5,
+                                    'span' => null,
+                                    'hits' => [1],
+                                ],
+                            ],
+                            'loops' => [],
+                        ],
+                    ],
                 ],
             ],
         ], JSON_THROW_ON_ERROR);

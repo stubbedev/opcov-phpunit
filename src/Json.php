@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OpCov\PHPUnit\Cov;
+namespace OpCov\PHPUnit;
 
 use InvalidArgumentException;
 
@@ -53,6 +53,30 @@ final class Json
         }
 
         return $string;
+    }
+
+    /**
+     * @return int<0, max>
+     */
+    public static function nonNegativeInt(mixed $value, string $what): int
+    {
+        if (!is_int($value) || $value < 0) {
+            throw new InvalidArgumentException(sprintf('%s is not a non-negative integer', $what));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @return positive-int
+     */
+    public static function positiveInt(mixed $value, string $what): int
+    {
+        if (!is_int($value) || $value < 1) {
+            throw new InvalidArgumentException(sprintf('%s is not a positive integer', $what));
+        }
+
+        return $value;
     }
 
     /**

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace OpCov\PHPUnit\Cov;
 
 use InvalidArgumentException;
+use OpCov\PHPUnit\Branch\FileBranches;
+use OpCov\PHPUnit\Json;
 
 final readonly class ReportFile
 {
@@ -14,6 +16,7 @@ final readonly class ReportFile
     private function __construct(
         public string $sha256,
         public array $lines,
+        public FileBranches $branches,
     ) {}
 
     /**
@@ -36,7 +39,12 @@ final readonly class ReportFile
                 ));
             }
 
-            $files[$path] = self::fromArray(Json::object($entries[$key] ?? null, 'files.' . $key), $key, $testCount);
+            $files[$path] = self::fromArray(
+                Json::object($entries[$key] ?? null, 'files.' . $key),
+                $key,
+                $path,
+                $testCount,
+            );
         }
 
         return $files;
@@ -44,8 +52,9 @@ final readonly class ReportFile
 
     /**
      * @param array<array-key, mixed> $file
+     * @param non-empty-string $path
      */
-    public static function fromArray(array $file, string $key, int $testCount): self
+    public static function fromArray(array $file, string $key, string $path, int $testCount): self
     {
         $sha256 = Json::string($file['sha256'] ?? null, sprintf('files.%s.sha256', $key));
 
@@ -74,6 +83,31 @@ final readonly class ReportFile
             );
         }
 
-        return new self($sha256, $lines);
+        return new self(
+            $sha256,
+            $lines,
+            FileBranches::fromModel(
+                Json::object($file['functions'] ?? null, sprintf('files.%s.functions', $key)),
+                $key,
+                $path,
+                $testCount,
+            ),
+        );
+    }
+
+    /**
+     * @return array<int<0, max>, list<positive-int>>
+     */
+    public function linesByTest(): array
+    {
+        $byTest = [];
+
+        foreach ($this->lines as $line => $tests) {
+            foreach ($tests as $test) {
+                $byTest[$test][] = $line;
+            }
+        }
+
+        return $byTest;
     }
 }

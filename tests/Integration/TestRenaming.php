@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace OpCov\PHPUnit\Tests\Integration;
 
-use OpCov\PHPUnit\Cov\Json;
+use OpCov\PHPUnit\Json;
 use RuntimeException;
 
 final readonly class TestRenaming

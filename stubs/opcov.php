@@ -21,7 +21,13 @@ function start(): void
 }
 
 /**
- * @return array<non-empty-string, array{lines: array<positive-int, true>}>
+ * @return array<non-empty-string, array{
+ *     lines: array<positive-int, true>,
+ *     functions: array<string, array{
+ *         outcomes: array<string, true>,
+ *         loops: array<string, array{zero?: true, second?: true}>,
+ *     }>,
+ * }>
  */
 function stop(?string $test = null): array
 {
@@ -48,7 +54,21 @@ function get_status(): array
 /**
  * @param list<string> $files
  *
- * @return array<non-empty-string, array{lines: array<positive-int, list<int>>, functions: array<string, mixed>}>
+ * @return array<non-empty-string, array{
+ *     lines: array<positive-int, list<int>>,
+ *     functions: array<string, array{
+ *         span: null|list<int>,
+ *         outcomes: list<array{
+ *             id: string,
+ *             site: int,
+ *             kind: string|array<string, int>,
+ *             line: int,
+ *             span: null|list<int>,
+ *             hits: list<int>,
+ *         }>,
+ *         loops: list<array{id: string, kind: string, line: int, zero: null|list<int>, second: list<int>}>,
+ *     }>,
+ * }>
  */
 function executable(array $files): array
 {

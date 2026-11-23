@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace OpCov\PHPUnit;
 
 use LogicException;
+use OpCov\PHPUnit\Branch\FileBranches;
+use OpCov\PHPUnit\Branch\Outcome;
 use SebastianBergmann\CodeCoverage\Data\RawCodeCoverageData;
 use SebastianBergmann\CodeCoverage\Driver\Driver as CodeCoverageDriver;
+use SebastianBergmann\CodeCoverage\Driver\Granularity;
 
 final class Driver extends CodeCoverageDriver
 {
@@ -15,9 +18,9 @@ final class Driver extends CodeCoverageDriver
     private readonly bool $collects;
 
     /**
-     * @var array<string, true>
+     * @var array<string, FileBranches>
      */
-    private array $modelledFiles = [];
+    private array $models = [];
 
     public function __construct(?Version $recordedBy = null)
     {
@@ -43,6 +46,12 @@ final class Driver extends CodeCoverageDriver
         return $this->name() . ' ' . $this->version();
     }
 
+    // @mago-expect analysis:missing-override-attribute
+    protected function canCollectBranchCoverage(): bool
+    {
+        return true;
+    }
+
     #[\Override]
     public function start(): void
     {
@@ -61,26 +70,57 @@ final class Driver extends CodeCoverageDriver
     {
         $hits = \opcov\stop();
         \opcov\reset();
+        $raw = new RawCoverage($this->granularity() !== Granularity::Line);
 
         $unmodelled = array_values(array_filter(
             array_keys($hits),
-            fn(string $file): bool => !array_key_exists($file, $this->modelledFiles),
+            fn(string $file): bool => !array_key_exists($file, $this->models),
         ));
-        $lines = [];
 
         foreach (\opcov\executable($unmodelled) as $file => $model) {
-            $this->modelledFiles[$file] = true;
-            foreach (array_keys($model['lines']) as $line) {
-                $lines[$file][$line] = self::LINE_NOT_EXECUTED;
-            }
+            $this->models[$file] = FileBranches::fromModel($model['functions'], $file, $file, 0);
+            $raw->unexecuted($file, array_keys($model['lines']), $this->models[$file]);
         }
 
         foreach ($hits as $file => $hit) {
-            foreach ($hit['lines'] as $line => $_) {
-                $lines[$file][$line] = self::LINE_EXECUTED;
+            $raw->executed(
+                $file,
+                array_keys($hit['lines']),
+                $this->modelOf($file),
+                $raw->branches ? self::taken($hit['functions'], $file) : [],
+            );
+        }
+
+        return $raw->build();
+    }
+
+    private function modelOf(string $file): FileBranches
+    {
+        return (
+            $this->models[$file] ?? throw new LogicException(sprintf(
+                'opcov\\executable() did not describe %s, whose hits opcov\\stop() returned',
+                $file,
+            ))
+        );
+    }
+
+    /**
+     * @param array<string, array{outcomes: array<string, true>, loops: array<string, mixed>}> $functions
+     *
+     * @return array<string, array<int<0, max>, true>>
+     */
+    private static function taken(array $functions, string $file): array
+    {
+        $taken = [];
+
+        foreach ($functions as $key => $function) {
+            $taken[$key] = [];
+
+            foreach (array_keys($function['outcomes']) as $id) {
+                $taken[$key][Outcome::number($id, sprintf('%s %s', $file, $key))] = true;
             }
         }
 
-        return RawCodeCoverageData::fromLineCoverage($lines);
+        return $taken;
     }
 }
