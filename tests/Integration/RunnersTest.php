@@ -9,31 +9,30 @@ use PHPUnit\Framework\TestCase;
 
 final class RunnersTest extends TestCase
 {
+    private const string PHPUNIT = 'vendor/bin/phpunit';
+
+    private const string PEST = 'vendor/bin/pest';
+
     private const array RUNNERS = [
-        'phpunit12' => 'vendor/bin/phpunit',
-        'phpunit13' => 'vendor/bin/phpunit',
-        'pest4' => 'vendor/bin/pest',
+        'phpunit13' => self::PHPUNIT,
+        'pest4' => self::PEST,
+        'pest5' => self::PEST,
     ];
 
     private const int PEST_FAILURES = 2;
 
     public function testEveryRunnerWritesTheSameReportUpToTestIdFormatting(): void
     {
-        $normalized = [];
+        $expected = $this->normalizedReport('phpunit12', self::PHPUNIT);
 
         foreach (self::RUNNERS as $name => $runner) {
-            $normalized[$name] = $this->runFixture($name, $runner)->withTestNames(
-                self::canonicalTestName(...),
-            )->document;
+            self::assertSame($expected, $this->normalizedReport($name, $runner), $name);
         }
-
-        self::assertSame($normalized['phpunit12'], $normalized['phpunit13']);
-        self::assertSame($normalized['phpunit12'], $normalized['pest4']);
     }
 
     public function testAttributionFollowsTheTestOutcome(): void
     {
-        $report = $this->runFixture('phpunit12', 'vendor/bin/phpunit');
+        $report = $this->runFixture('phpunit12', self::PHPUNIT);
         $hits = $report->hitsByLine();
         $tests = $report->tests();
 
@@ -82,12 +81,12 @@ final class RunnersTest extends TestCase
         }
 
         sort($tests);
-        self::assertSame($this->runFixture('phpunit12', 'vendor/bin/phpunit')->tests(), $tests);
+        self::assertSame($this->runFixture('phpunit12', self::PHPUNIT)->tests(), $tests);
     }
 
     public function testARunWithoutTheExtensionFails(): void
     {
-        $process = Fixture::runner('phpunit12')->php(['vendor/bin/phpunit']);
+        $process = Fixture::runner('phpunit12')->php([self::PHPUNIT]);
 
         self::assertSame(Abort::EXIT_CODE, $process->exitCode, $process->describe());
         self::assertStringContainsString('the opcov extension is not loaded', $process->errors);
@@ -96,10 +95,18 @@ final class RunnersTest extends TestCase
     public function testARunWithCollectionOffFails(): void
     {
         $fixture = Fixture::runner('phpunit12');
-        $process = $fixture->php(['-d', $fixture->extensionSetting(), 'vendor/bin/phpunit']);
+        $process = $fixture->php(['-d', $fixture->extensionSetting(), self::PHPUNIT]);
 
         self::assertSame(Abort::EXIT_CODE, $process->exitCode, $process->describe());
         self::assertStringContainsString('opcov.enabled was 0 when PHP started', $process->errors);
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function normalizedReport(string $name, string $runner): array
+    {
+        return $this->runFixture($name, $runner)->withTestNames(self::canonicalTestName(...))->document;
     }
 
     private function runFixture(string $name, string $runner): Report
@@ -107,7 +114,7 @@ final class RunnersTest extends TestCase
         $fixture = Fixture::runner($name);
         $fixture->clean();
         $process = $fixture->launch([$runner]);
-        $expected = $name === 'pest4' ? self::PEST_FAILURES : Fixture::PHPUNIT_ERRORS;
+        $expected = $runner === self::PEST ? self::PEST_FAILURES : Fixture::PHPUNIT_ERRORS;
 
         self::assertSame($expected, $process->exitCode, $process->describe());
 

@@ -1,6 +1,6 @@
 {
     "name": "opcov/phpunit",
-    "description": "PHPUnit 12/13 and Pest 4 integration for the opcov coverage extension",
+    "description": "PHPUnit 12/13 and Pest 4/5 integration for the opcov coverage extension",
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/stubbedev/opcov",
