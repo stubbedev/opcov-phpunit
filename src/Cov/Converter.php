@@ -16,14 +16,19 @@ final class Converter
 
     public static function convert(Report $report): CodeCoverage
     {
+        $files = array_filter(
+            $report->files,
+            static fn(string $path): bool => !EvalEntry::is($path),
+            ARRAY_FILTER_USE_KEY,
+        );
         $filter = new Filter();
-        $filter->includeFiles(array_keys($report->files));
+        $filter->includeFiles(array_keys($files));
         $coverage = new CodeCoverage(new Driver($report->recordedBy), $filter);
         $executable = new RawCoverage(branches: true);
         $linesByTest = [];
         $takenByTest = [];
 
-        foreach ($report->files as $path => $file) {
+        foreach ($files as $path => $file) {
             self::verifySource($path, $file->sha256);
             $executable->unexecuted($path, array_keys($file->lines), $file->branches);
 
@@ -51,7 +56,7 @@ final class Converter
                     $path,
                     $lines[$path] ?? [],
                     (
-                        $report->files[$path] ?? throw new RuntimeException(sprintf('the report has no file %s', $path))
+                        $files[$path] ?? throw new RuntimeException(sprintf('the report has no file %s', $path))
                     )->branches,
                     $taken[$path] ?? [],
                 );

@@ -53,7 +53,7 @@ final class ConverterTest extends TestCase
         $this->directory->remove();
     }
 
-    public function testLinesOutcomesLoopsAndAttributionSurviveTheConversion(): void
+    public function testLinesOutcomesLoopsAndAttributionSurviveTheConversionWithoutTheEvalEntry(): void
     {
         $source = $this->directory->write('src/choose.php', self::SOURCE);
         $report = $this->directory->write('opcov.json', $this->report(hash_file('sha256', $source)));
@@ -271,6 +271,17 @@ final class ConverterTest extends TestCase
                                     'second' => [0],
                                 ],
                             ],
+                        ],
+                    ],
+                ],
+                "src/choose.php(3) : eval()'d code #0123456789abcdef" => [
+                    'sha256' => str_repeat('a', times: 64),
+                    'lines' => ['1' => [0]],
+                    'functions' => [
+                        "{main}@src/choose.php(3) : eval()'d code #0123456789abcdef" => [
+                            'span' => null,
+                            'outcomes' => [],
+                            'loops' => [],
                         ],
                     ],
                 ],
