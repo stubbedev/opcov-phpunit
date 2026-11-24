@@ -6,6 +6,7 @@ namespace OpCov\PHPUnit\Cov;
 
 use InvalidArgumentException;
 use OpCov\PHPUnit\Branch\FileBranches;
+use OpCov\PHPUnit\Encoding;
 use OpCov\PHPUnit\Json;
 
 final readonly class ReportFile
@@ -30,7 +31,8 @@ final readonly class ReportFile
 
         foreach (array_keys($entries) as $key) {
             $key = (string) $key;
-            $path = $root === null ? $key : $root . '/' . $key;
+            $what = sprintf('files key "%s"', $key);
+            $path = Encoding::decode($root === null ? $key : $root . '/' . $key, $what);
 
             if ($path === '' || !str_starts_with($path, '/')) {
                 throw new InvalidArgumentException(sprintf(
@@ -85,7 +87,7 @@ final readonly class ReportFile
             $lines,
             FileBranches::fromModel(
                 Json::object($file['functions'] ?? null, sprintf('files.%s.functions', $key)),
-                $key,
+                Encoding::decode($key, sprintf('files key "%s"', $key)),
                 $path,
                 $testCount,
             ),

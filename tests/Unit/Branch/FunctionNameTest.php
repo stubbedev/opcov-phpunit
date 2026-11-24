@@ -47,6 +47,18 @@ final class FunctionNameTest extends TestCase
         ));
     }
 
+    public function testKeysInCanonicalByteEncodingMapToTheRawNames(): void
+    {
+        $file = "/srv/caf\xE9 100%.php";
+
+        self::assertSame("Caf\xE9->r\xE9sum\xE9", FunctionName::of('Caf%E9::r%E9sum%E9', $file, $file));
+        self::assertSame('{main}', FunctionName::of('{main}@/srv/caf%E9 100%25.php', $file, $file));
+        self::assertSame(
+            sprintf('{closure:%s:3-4}', $file),
+            FunctionName::of('{closure}@/srv/caf%E9 100%25.php:3-4', $file, $file),
+        );
+    }
+
     /**
      * @return iterable<string, array{string}>
      */
@@ -59,6 +71,7 @@ final class FunctionNameTest extends TestCase
         yield 'closure with ordinal 0' => ['{closure}@src/a.php:1-2#0'];
         yield 'anonymous class without member' => ['class@anonymous@src/a.php:3-9'];
         yield 'unknown hook' => ['App\Foo::$name::unset'];
+        yield 'non-canonical escape' => ['Caf%e9::run'];
     }
 
     #[DataProvider('malformedKeys')]

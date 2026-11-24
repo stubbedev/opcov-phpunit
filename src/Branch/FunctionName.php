@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace OpCov\PHPUnit\Branch;
 
 use InvalidArgumentException;
+use OpCov\PHPUnit\Encoding;
 
 final class FunctionName
 {
@@ -19,13 +20,16 @@ final class FunctionName
     private const string MEMBER = '(?<member>\$[^:]+::(?:get|set)|[^:$]+)';
 
     /**
-     * @param string $keyFile the file as the function key names it: the report's files key, or the absolute path
-     * @param non-empty-string $file the absolute path of that file
+     * @param string $key the function key in opcov's canonical byte encoding
+     * @param string $keyFile the bytes of the file as the function key names it: the report's files key, or the absolute path
+     * @param non-empty-string $file the bytes of the absolute path of that file
      *
      * @return non-empty-string
      */
     public static function of(string $key, string $keyFile, string $file): string
     {
+        $key = Encoding::decode($key, 'function key');
+
         if ($key === '') {
             throw new InvalidArgumentException(sprintf('a function of %s has an empty key', $file));
         }
