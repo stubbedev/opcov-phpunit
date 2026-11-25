@@ -8,7 +8,7 @@ use RuntimeException;
 
 final class Handshake
 {
-    public const string PACKAGE_VERSION = '0.1.2';
+    public const string PACKAGE_VERSION = '0.1.3';
 
     public const string REPORT_SCHEMA = 'opcov-report/1';
 
