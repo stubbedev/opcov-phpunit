@@ -1,7 +1,7 @@
 {
     "name": "opcov/phpunit",
     "description": "PHPUnit 12/13 and Pest 4/5 integration for the opcov coverage extension",
-    "type": "library",
+    "type": "composer-plugin",
     "license": "MIT",
     "homepage": "https://github.com/stubbedev/opcov",
     "keywords": [
@@ -17,13 +17,15 @@
     },
     "require": {
         "php": "~8.4.0 || ~8.5.0 || ~8.6.0",
+        "composer-plugin-api": "^2.2",
         "ext-dom": "*",
         "ext-json": "*",
         "phpunit/phpunit": "^12.0 || ^13.3"
     },
     "suggest": {
+        "ext-curl": "Downloads the opcov CLI; without it allow_url_fopen and ext-openssl are used",
         "ext-opcov": "The opcov extension that collects the coverage; see docs/install.md",
-        "ext-pcntl": "Required by vendor/bin/opcov-phpunit to start the test runner",
+        "ext-pcntl": "Required by vendor/bin/opcov-phpunit to start the test runner, and lets vendor/bin/opcov replace itself with the opcov CLI",
         "ext-posix": "Required by vendor/bin/opcov-phpunit to create its private run directory"
     },
     "autoload": {
@@ -37,10 +39,15 @@
         }
     },
     "bin": [
+        "bin/opcov",
         "bin/opcov-phpunit",
         "bin/opcov-cov"
     ],
     "config": {
         "sort-packages": true
+    },
+    "extra": {
+        "class": "OpCov\\PHPUnit\\Cli\\ComposerPlugin",
+        "plugin-optional": true
     }
 }

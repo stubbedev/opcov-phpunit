@@ -4,3 +4,4 @@ tests/fixture/*/build/
 build/
 .phpunit.cache/
 tests/fixture/*/.phpunit.result.cache
+/bin/opcov-*

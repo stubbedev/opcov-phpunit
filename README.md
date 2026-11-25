@@ -7,6 +7,12 @@ the opcode-level line, branch-outcome and loop coverage extension for PHP.
 composer require --dev opcov/phpunit
 ```
 
+It also installs the `opcov` command as `vendor/bin/opcov`: the package is a
+Composer plugin that downloads the native binary matching its version and
+checks it against the release's checksums (allow it with
+`composer config allow-plugins.opcov/phpunit true`, or let `vendor/bin/opcov`
+download it on first use).
+
 The extension itself installs with `pie install opcov/opcov` (see
 [docs/install.md](https://github.com/stubbedev/opcov/blob/main/docs/install.md)).
 Usage, configuration, paratest, the PHPUnit 13.3 coverage driver and the
